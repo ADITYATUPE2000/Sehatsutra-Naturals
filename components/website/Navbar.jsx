@@ -14,6 +14,7 @@ import {
 import { useStore } from '/lib/store'
 import Logo from "@/assets/images/Logo.png"
 import Image from 'next/image'
+import { WEBSITE_CHECKOUT } from '@/routes/WebsiteRoute'
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -68,13 +69,13 @@ export default function Navbar() {
               Products
             </Link>
             <Link 
-              href="/about" 
+              href="/" 
               className="text-gray-700 hover:text-[#7BA428] font-1xl transition-colors duration-200"
             >
               About
             </Link>
             <Link 
-              href="/contact" 
+              href="/" 
               className="text-gray-700 hover:text-[#7BA428] font-1xl transition-colors duration-200"
             >
               Contact
@@ -127,8 +128,8 @@ export default function Navbar() {
             )}
 
             {/* Shopping Cart */}
-            <button
-              onClick={() => setCartOpen(!isCartOpen)}
+            <Link
+              href={WEBSITE_CHECKOUT}
               className="relative p-2 text-gray-600 hover:text-[#7BA428] transition-colors"
             >
               <ShoppingCartIcon className="w-6 h-6" />
@@ -137,7 +138,7 @@ export default function Navbar() {
                   {getCartItemsCount()}
                 </span>
               )}
-            </button>
+            </Link>
 
             {/* Mobile Menu Button */}
             <button

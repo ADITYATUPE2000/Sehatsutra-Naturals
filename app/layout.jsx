@@ -3,7 +3,7 @@ import './globals.css';
 import ClientLayout from '@/components/Application/ClientLayout';
 
 export const metadata = {
-  title: "Product Ecommerce",
+  title: "Sehatsutra Naturals",
   description: "Nourish Your Body with Organic Superfoods",
 };
 

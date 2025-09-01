@@ -238,7 +238,7 @@ const CartPage = () => {
                           </div>
                         ) : (
                           <Image
-                            src={item.product.images?.[0] || Product1 }
+                            src={ Product1 }
                             alt={item.product.name || 'Product'}
                             width={96}
                             height={96}
