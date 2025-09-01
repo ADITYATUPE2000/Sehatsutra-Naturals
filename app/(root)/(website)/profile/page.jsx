@@ -41,7 +41,7 @@ const Profile = () => {
     defaultValues: {
       name: "",
       phone: "",
-      address: ""
+      address: "",
     }
   })
 
