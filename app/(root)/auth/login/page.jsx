@@ -10,6 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { showToast } from '@/lib/showToast'
 import { zSchema } from '@/lib/zodSchema'
 import { useDispatch } from 'react-redux'
+import { useStore } from '@/lib/store'
 import { CardContent } from '@/components/ui/card.jsx';
 import OTPVerification from '@/components/Application/OTPVerification';
 import { login } from '@/store/reducer/authReducer'
@@ -21,6 +22,7 @@ import Logo from "@/assets/images/Logo.png"
 
 export default function LoginPage() {
   const dispatch = useDispatch()
+  const { setUser } = useStore()
   const searchParams = useSearchParams()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setLoading] = useState(false)
@@ -100,8 +102,9 @@ export default function LoginPage() {
       otpForm.reset() // ✅ Added: Reset OTP form after success
       showToast('success', otpResponse.message)
 
-      // Dispatch login action
+      // Dispatch login action to both stores
       dispatch(login(otpResponse.data))
+      setUser(otpResponse.data)
 
       // Handle navigation
       if (searchParams.has('callback')) {

@@ -2,24 +2,23 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/databaseConnection';
 import Cart from '@/models/Cart.model';
 import Product from '@/models/Product.model';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { isAuthenticated } from '@/lib/authentication';
 
 // GET /api/cart - Get user's cart
 export async function GET(request) {
   try {
     await connectDB();
     
-    const session = await getServerSession(authOptions);
+    const authResult = await isAuthenticated('user');
     
-    if (!session) {
+    if (!authResult.isAuth) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
       );
     }
     
-    const cart = await Cart.findOne({ user: session.user.id, isActive: true })
+    const cart = await Cart.findOne({ user: authResult.userId, isActive: true })
       .populate('items.product', 'name price images stock');
     
     if (!cart) {
@@ -52,9 +51,9 @@ export async function POST(request) {
   try {
     await connectDB();
     
-    const session = await getServerSession(authOptions);
+    const authResult = await isAuthenticated('user');
     
-    if (!session) {
+    if (!authResult.isAuth) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
@@ -88,11 +87,11 @@ export async function POST(request) {
     }
     
     // Find or create cart
-    let cart = await Cart.findOne({ user: session.user.id, isActive: true });
+    let cart = await Cart.findOne({ user: authResult.userId, isActive: true });
     
     if (!cart) {
       cart = new Cart({
-        user: session.user.id,
+        user: authResult.userId,
         items: []
       });
     }
@@ -139,9 +138,9 @@ export async function PUT(request) {
   try {
     await connectDB();
     
-    const session = await getServerSession(authOptions);
+    const authResult = await isAuthenticated('user');
     
-    if (!session) {
+    if (!authResult.isAuth) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
@@ -157,7 +156,7 @@ export async function PUT(request) {
       );
     }
     
-    const cart = await Cart.findOne({ user: session.user.id, isActive: true });
+    const cart = await Cart.findOne({ user: authResult.userId, isActive: true });
     
     if (!cart) {
       return NextResponse.json(
@@ -210,16 +209,16 @@ export async function DELETE(request) {
   try {
     await connectDB();
     
-    const session = await getServerSession(authOptions);
+    const authResult = await isAuthenticated('user');
     
-    if (!session) {
+    if (!authResult.isAuth) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
       );
     }
     
-    const cart = await Cart.findOne({ user: session.user.id, isActive: true });
+    const cart = await Cart.findOne({ user: authResult.userId, isActive: true });
     
     if (!cart) {
       return NextResponse.json(

@@ -11,11 +11,16 @@ const productSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  category: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+    required: true
+  },
   description: {
     type: String,
     required: true
   },
-  price: {
+  mrp: {
     type: Number,
     required: true,
     min: 0
@@ -29,10 +34,12 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true
   }],
-  category: {
-    type: String,
+  media: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Media',
     required: true
-  },
+  }],
+
   brand: {
     type: String,
     default: ''

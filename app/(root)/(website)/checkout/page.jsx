@@ -7,14 +7,16 @@ import Footer from "@/components/website/Footer";
 import { useState, useEffect } from 'react';
 import { ShoppingCart, CreditCard, MapPin, User } from "lucide-react";
 import { showToast } from '@/lib/showToast';
-import { useSession } from 'next-auth/react';
+import { useStore } from '@/lib/store';
 import { useRouter } from 'next/navigation';
+import Product1 from '@/assets/images/Product1.jpeg';
+
 
 const CheckoutPage = () => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const { data: session } = useSession();
+  const { user } = useStore();
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -29,18 +31,18 @@ const CheckoutPage = () => {
   });
 
   useEffect(() => {
-    if (session) {
+    if (user) {
       fetchCart();
       // Pre-fill user data
       setFormData(prev => ({
         ...prev,
-        fullName: session.user?.name || '',
-        email: session.user?.email || ''
+        fullName: user?.name || '',
+        email: user?.email || ''
       }));
     } else {
       setLoading(false);
     }
-  }, [session]);
+  }, [user]);
 
   const fetchCart = async () => {
     try {
@@ -48,7 +50,7 @@ const CheckoutPage = () => {
       const data = await response.json();
       
       if (data.success) {
-        setCartItems(data.data);
+        setCartItems(data.data.items || data.data || []);
       } else {
         showToast('error', 'Failed to load cart');
       }
@@ -130,7 +132,7 @@ const CheckoutPage = () => {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: orderData.order.amount,
         currency: orderData.order.currency,
-        name: 'Product Ecommerce',
+        name: 'Product Name',
         description: 'Purchase Description',
         order_id: orderData.order.id,
         handler: async function (response) {
@@ -197,7 +199,7 @@ const CheckoutPage = () => {
     );
   }
 
-  if (!session) {
+  if (!user) {
     return (
       <>
         <Navbar />
@@ -242,7 +244,7 @@ const CheckoutPage = () => {
 
           <form onSubmit={handleCheckout} className="grid lg:grid-cols-3 gap-8">
             {/* Shipping Information */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-6 border rounded ">
               <div className="bg-card rounded-lg p-6">
                 <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center">
                   <User className="w-5 h-5 mr-2" />
@@ -395,7 +397,7 @@ const CheckoutPage = () => {
 
             {/* Order Summary */}
             <div className="lg:col-span-1">
-              <div className="bg-card rounded-lg p-6 sticky top-24">
+              <div className="bg-card rounded-lg p-6 sticky top-24 border rounded ">
                 <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center">
                   <ShoppingCart className="w-5 h-5 mr-2" />
                   Order Summary
@@ -406,7 +408,7 @@ const CheckoutPage = () => {
                     <div key={item.product._id} className="flex items-center space-x-3">
                       <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
                         <Image
-                          src={item.product.images[0] || '/placeholder-product.jpg'}
+                          src={item.product.images[0] || Product1 }
                           alt={item.product.name}
                           width={64}
                           height={64}

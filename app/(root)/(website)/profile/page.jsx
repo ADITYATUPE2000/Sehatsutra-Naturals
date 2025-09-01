@@ -17,10 +17,14 @@ import { useDispatch } from 'react-redux'
 import axios from 'axios'
 import { showToast } from '@/lib/showToast'
 import { login } from '@/store/reducer/authReducer'
+import { useStore } from '@/lib/store'
+import Navbar from '@/components/website/Navbar'
+import Footer from '@/components/website/Footer'
 
 
 const Profile = () => {
   const dispatch = useDispatch()
+  const { setUser } = useStore()
   const { data: user } = useFetch('api/profile/get')
   const [loading, setLoading] = useState(false)
   const [preview, setPreview] = useState()
@@ -79,8 +83,10 @@ const Profile = () => {
         throw new Error(response.message)
       }
 
-      showToastt('success', response.message)
-      dispatch(loginn(response.data))
+      showToast('success', response.message)
+      // Update both stores
+      dispatch(login(response.data))
+      setUser(response.data)
 
     } catch (error) {
       showToast('error', error.message)
@@ -91,117 +97,119 @@ const Profile = () => {
 
   return (
     <div>
-      <UserPanelLayout>
-        <div className='shadow rounded bg-white'>
-          <div className='p-5 text-xl font-semibold border-b'>
-            Profile
-          </div>
+      <Navbar/>
+        <UserPanelLayout>
+          <div className='shadow rounded bg-white'>
+            <div className='p-5 text-xl font-semibold border-b'>
+              Profile
+            </div>
 
-          <div className='p-5'>
-            <Form {...form}>
-              <form className='grid md:grid-cols-2 grid-cols-1 gap-5' onSubmit={form.handleSubmit(updateProfile)}>
-                
-                {/* Avatar Upload Section */}
-                <div className='md:col-span-2 col-span-1 flex justify-center items-center mb-5'>
-                  <Dropzone 
-                    onDrop={acceptedFiles => handleFileSelection(acceptedFiles)}
-                    accept={{
-                      'image/*': ['.jpeg', '.jpg', '.png', '.gif']
-                    }}
-                    multiple={false}
-                  >
-                    {({getRootProps, getInputProps}) => (
-                      <div {...getRootProps()} className='relative cursor-pointer group'>
-                        <input {...getInputProps()} />
-                        <Avatar className='w-28 h-28 border-2 border-gray-200'>
-                          <AvatarImage src={preview || userIcon.src} alt="Profile Avatar" />
-                        </Avatar>
-                        <div className='absolute inset-0 flex justify-center items-center border-2 border-violet-500 rounded-full group-hover:flex hidden cursor-pointer bg-black/50'>
-                          <FaCamera color='#7c3aed' size={20} />
+            <div className='p-5'>
+              <Form {...form}>
+                <form className='grid md:grid-cols-2 grid-cols-1 gap-5' onSubmit={form.handleSubmit(updateProfile)}>
+                  
+                  {/* Avatar Upload Section */}
+                  <div className='md:col-span-2 col-span-1 flex justify-center items-center mb-5'>
+                    <Dropzone 
+                      onDrop={acceptedFiles => handleFileSelection(acceptedFiles)}
+                      accept={{
+                        'image/*': ['.jpeg', '.jpg', '.png', '.gif']
+                      }}
+                      multiple={false}
+                    >
+                      {({getRootProps, getInputProps}) => (
+                        <div {...getRootProps()} className='relative cursor-pointer group'>
+                          <input {...getInputProps()} />
+                          <Avatar className='w-28 h-28 border-2 border-gray-200'>
+                            <AvatarImage src={preview || userIcon.src} alt="Profile Avatar" />
+                          </Avatar>
+                          <div className='absolute inset-0 flex justify-center items-center border-2 border-violet-500 rounded-full group-hover:flex hidden cursor-pointer bg-black/50'>
+                            <FaCamera color='#7c3aed' size={20} />
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </Dropzone>
-                </div>
+                      )}
+                    </Dropzone>
+                  </div>
 
-                {/* Name Field */}
-                <div className='mb-3'>
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Name</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="text" 
-                            placeholder="Enter your name" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                  {/* Name Field */}
+                  <div className='mb-3'>
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Name</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="text" 
+                              placeholder="Enter your name" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                {/* Phone Field */}
-                <div className='mb-3'>
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="tel" 
-                            placeholder="Enter your phone number" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                  {/* Phone Field */}
+                  <div className='mb-3'>
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="tel" 
+                              placeholder="Enter your phone number" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                {/* Address Field */}
-                <div className='mb-3 md:col-span-2 col-span-1'>
-                  <FormField
-                    control={form.control}
-                    name="address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Address</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Enter your address" 
-                            rows={3}
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                  {/* Address Field */}
+                  <div className='mb-3 md:col-span-2 col-span-1'>
+                    <FormField
+                      control={form.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Address</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Enter your address" 
+                              rows={3}
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                {/* Submit Button */}
-                <div className='mb-3 md:col-span-2 col-span-1'>
-                  <ButtonLoading 
-                    loading={loading} 
-                    type="submit" 
-                    text="Save Changes" 
-                    className='w-full md:w-auto px-6 py-2'
-                  />
-                </div>
-                
-              </form>
-            </Form>
+                  {/* Submit Button */}
+                  <div className='mb-3 md:col-span-2 col-span-1'>
+                    <ButtonLoading 
+                      loading={loading} 
+                      type="submit" 
+                      text="Save Changes" 
+                      className='w-full md:w-auto px-6 py-2'
+                    />
+                  </div>
+                  
+                </form>
+              </Form>
+            </div>
           </div>
-        </div>
-      </UserPanelLayout>
+        </UserPanelLayout>
+      <Footer/>
     </div>
   )
 }

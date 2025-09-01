@@ -6,8 +6,8 @@ import Navbar from "@/components/website/Navbar";
 import Image from "next/image";
 import Footer from "@/components/website/Footer";
 import { HiMinus, HiPlus } from 'react-icons/hi2';
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useState, useEffect} from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { showToast } from '@/lib/showToast';
 
@@ -17,7 +17,8 @@ const ProductPage = () => {
   const [loading, setLoading] = useState(true);
   const [addingToCart, setAddingToCart] = useState(false);
   const params = useParams();
-  const { data: session } = useSession();
+  const router = useRouter();
+  const { user } = useStore();
 
   const slug = params.slug;
 
@@ -56,7 +57,7 @@ const ProductPage = () => {
   };
 
   const handleAddToCart = async () => {
-    if (!session) {
+    if (!user) {
       showToast('error', 'Please login to add items to cart');
       return;
     }
@@ -82,6 +83,10 @@ const ProductPage = () => {
       if (data.success) {
         showToast('success', 'Added to cart successfully!');
         setQty(1);
+        // Redirect to cart page
+        setTimeout(() => {
+          router.push('/cart');
+        }, 1000);
       } else {
         showToast('error', data.error || 'Failed to add to cart');
       }
@@ -215,14 +220,18 @@ const ProductPage = () => {
               </div>
 
               {/* Add to Cart */}
-              <Button 
-                size="lg" 
-                className="bg-[#2D5016] hover:bg-[#7BA428] w-full h-14 text-lg text-white font-semibold" 
-                onClick={handleAddToCart}
-                disabled={addingToCart || product.stock === 0}
-              >
-                {addingToCart ? 'Adding to Cart...' : 'Add to Cart'}
+              
+              <div className="mt-5">
+              {!addingToCart ?
+              <ButtonLoading type="button" text="Add To Cart"
+              className="w-full rounded-full py-6 text-md cursor-pointer"
+              onClick={handleAddToCart} />
+              :
+              <Button lassName="w-full rounded-full py-6 text-md cursor-pointer" 
+              type="button" asChild>
+              <Link href={WEBSITE_CART}>Go To Cart</Link>
               </Button>
+              }</div>
 
               {/* Guarantee */}
               <div className="flex items-center justify-center space-x-2 text-muted-foreground">

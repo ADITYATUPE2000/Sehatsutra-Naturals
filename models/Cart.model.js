@@ -55,6 +55,6 @@ cartSchema.pre('save', function(next) {
 });
 
 // Ensure user has only one active cart
-cartSchema.index({ user: 1 }, { unique: true });
+cartSchema.index({ user: 1, isActive: 1 }, { unique: true, partialFilterExpression: { isActive: true } });
 
 export default mongoose.models.Cart || mongoose.model('Cart', cartSchema);

@@ -8,10 +8,12 @@ import { USER_DASHBOARD ,USER_ORDERS, USER_PROFILE, WEBSITE_LOGIN } from '../../
 import { useDispatch } from 'react-redux'
 import axios from 'axios'
 import { logout } from '@/store/reducer/authReducer'
+import { useStore } from '@/lib/store'
 import { showToast } from '@/lib/showToast'
 const UserPanelNavigation = () => {
     const pathname = usePathname()
     const dispatch = useDispatch()
+    const { setUser } = useStore()
     const router = useRouter()
     const handleLogout = async () => {
        try {
@@ -19,7 +21,9 @@ const UserPanelNavigation = () => {
             if (!logoutResponse.success) {
                 throw new Error(logoutResponse.message)
             }
+            // Clear both Redux and Zustand stores
             dispatch(logout())
+            setUser(null)
             showToast('success', logoutResponse.message)
             router.push(WEBSITE_LOGIN)
         } catch (error) {

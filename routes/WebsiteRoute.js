@@ -4,6 +4,8 @@ export const WEBSITE_REGISTER ="/auth/register"
 export const WEBSITE_RESTPASSWORD ="/auth/reset-password" 
 
 
+export const WEBSITE_CHECKOUT = "/checkout"
+
 // user routes
 export const USER_DASHBOARD ="/my-account" 
 export const USER_PROFILE = "/profile"

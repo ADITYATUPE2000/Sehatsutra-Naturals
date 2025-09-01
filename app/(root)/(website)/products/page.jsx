@@ -7,15 +7,25 @@ import Footer from "@/components/website/Footer";
 import { useState, useEffect } from 'react';
 import { Star, ShoppingCart, Plus, X, ChevronDown, ChevronUp, Heart } from "lucide-react";
 import { showToast } from '@/lib/showToast'
-import { useSession } from 'next-auth/react';
+import { useStore } from '@/lib/store';
+import { useRouter } from 'next/navigation';
+import { useSession } from "next-auth/react";
+import { useDispatch, useSelector } from "react-redux";
+import { addIntoCart } from "@/store/reducer/cartReducer";
+import Product1 from '@/assets/images/Product1.jpeg';
+ 
 
-const ProductsPage = () => {
+const ProductsPage = ({ product }) => { // Added proper destructuring
+  const cartStore = useSelector((state) => state.cartStore); // Fixed typo: ueSelector -> useSelector
+  const dispatch = useDispatch();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [addingToCart, setAddingToCart] = useState({});
   const [showAddForm, setShowAddForm] = useState(false);
   const [addingProduct, setAddingProduct] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [qty, setQty] = useState(1); // Added missing qty state
+  const [variant, setVariant] = useState({ _id: 'default', sellingPrice: 0 }); // Added missing variant state
   const [expandedSections, setExpandedSections] = useState({
     features: true,
     care: false,
@@ -31,11 +41,25 @@ const ProductsPage = () => {
     images: '',
     isActive: true
   });
-  const { data: session } = useSession();
+  const { user } = useStore();
+  const router = useRouter();
 
   useEffect(() => {
-    fetchProducts();
+    fetchProducts(); // Call fetchProducts on component mount
   }, []);
+
+  useEffect(() => {
+    if (cartStore.count > 0 && product) {
+      const existingProduct = cartStore.products.findIndex((cartProduct) =>
+        cartProduct.productId === product._id && cartProduct.variantId === variant._id
+      );
+      if (existingProduct >= 0) {
+        setAddingProduct(true);
+      } else {
+        setAddingProduct(false);
+      }
+    }
+  }, [cartStore, product, variant._id]);
 
   // Reset selectedImage when products change
   useEffect(() => {
@@ -75,19 +99,27 @@ const ProductsPage = () => {
   };
 
   const handleAddToCart = async (productId, product) => {
-    if (!session) {
-      // Handle showToast safely - check if it exists and has the method
+    if (!user) {
       if (typeof showToast === 'function') {
-        showToast('Please login to add items to cart', 'error');
+        showToast('error','Please login to add items to cart' );
       } else if (showToast && typeof showToast.error === 'function') {
         showToast.error('Please login to add items to cart');
       } else {
         console.error('Please login to add items to cart');
-        alert('Please login to add items to cart'); // Fallback
+        alert('Please login to add items to cart');
       }
       return;
     }
 
+    const cartProduct = {
+      productId: product._id,
+      variantId: variant._id,
+      name: product.name,
+      sellingPrice: variant.sellingPrice,
+      qty: qty,
+    };
+
+    dispatch(addIntoCart(cartProduct));
     setAddingToCart(prev => ({ ...prev, [productId]: true }));
     
     try {
@@ -106,16 +138,20 @@ const ProductsPage = () => {
       
       if (data.success) {
         if (typeof showToast === 'function') {
-          showToast('Added to cart successfully!', 'success');
+          showToast('success', 'Added to cart successfully!');
         } else if (showToast && typeof showToast.success === 'function') {
           showToast.success('Added to cart successfully!');
         } else {
           console.log('Added to cart successfully!');
         }
+        // Redirect to cart page
+        setTimeout(() => {
+          router.push('/cart');
+        }, 1000);
       } else {
         const errorMsg = data.error || 'Failed to add to cart';
         if (typeof showToast === 'function') {
-          showToast(errorMsg, 'error');
+          showToast('error', errorMsg );
         } else if (showToast && typeof showToast.error === 'function') {
           showToast.error(errorMsg);
         } else {
@@ -127,7 +163,7 @@ const ProductsPage = () => {
       console.error('Error adding to cart:', error);
       const errorMsg = 'Error adding to cart';
       if (typeof showToast === 'function') {
-        showToast(errorMsg, 'error');
+        showToast('error', errorMsg );
       } else if (showToast && typeof showToast.error === 'function') {
         showToast.error(errorMsg);
       } else {
@@ -161,7 +197,7 @@ const ProductsPage = () => {
       
       if (result.success) {
         if (typeof showToast === 'function') {
-          showToast('Product added successfully!', 'success');
+          showToast('success', 'Product added successfully!');
         } else if (showToast && typeof showToast.success === 'function') {
           showToast.success('Product added successfully!');
         } else {
@@ -181,7 +217,7 @@ const ProductsPage = () => {
       } else {
         const errorMsg = result.error || 'Failed to add product';
         if (typeof showToast === 'function') {
-          showToast(errorMsg, 'error');
+          showToast('error', errorMsg );
         } else if (showToast && typeof showToast.error === 'function') {
           showToast.error(errorMsg);
         } else {
@@ -193,7 +229,7 @@ const ProductsPage = () => {
       console.error('Failed to add product:', error);
       const errorMsg = 'Failed to add product: ' + error.message;
       if (typeof showToast === 'function') {
-        showToast(errorMsg, 'error');
+        showToast('error', errorMsg);
       } else if (showToast && typeof showToast.error === 'function') {
         showToast.error(errorMsg);
       } else {
@@ -245,125 +281,8 @@ const ProductsPage = () => {
       <Navbar />
       <div className="min-h-screen bg-background pt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          
-          {/* Add Product Button */}
-          {session && (
-            <div className="flex justify-end mb-6">
-              <Button
-                onClick={() => setShowAddForm(true)}
-                className="bg-[#2D5016] hover:bg-[#7BA428] text-white"
-              >
-                <Plus className="w-4 h-4 mr-2" /> Add New Product
-              </Button>
-            </div>
-          )}
 
-          {/* Add Product Form */}
-          {showAddForm && (
-            <div className="bg-card rounded-2xl p-6 mb-8">
-              <h2 className="text-2xl font-bold text-foreground mb-4">Add New Product</h2>
-              <form onSubmit={handleAddProduct} className="grid gap-4">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-muted-foreground mb-1">Name</label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleFormChange}
-                    required
-                    className="w-full p-2 border border-input rounded-md"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-muted-foreground mb-1">Description</label>
-                  <textarea
-                    id="description"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleFormChange}
-                    rows="3"
-                    className="w-full p-2 border border-input rounded-md"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="price" className="block text-sm font-medium text-muted-foreground mb-1">Price (₹)</label>
-                  <input
-                    type="number"
-                    id="price"
-                    name="price"
-                    value={formData.price}
-                    onChange={handleFormChange}
-                    required
-                    className="w-full p-2 border border-input rounded-md"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="category" className="block text-sm font-medium text-muted-foreground mb-1">Category</label>
-                  <input
-                    type="text"
-                    id="category"
-                    name="category"
-                    value={formData.category}
-                    onChange={handleFormChange}
-                    required
-                    className="w-full p-2 border border-input rounded-md"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="stock" className="block text-sm font-medium text-muted-foreground mb-1">Stock</label>
-                  <input
-                    type="number"
-                    id="stock"
-                    name="stock"
-                    value={formData.stock}
-                    onChange={handleFormChange}
-                    required
-                    className="w-full p-2 border border-input rounded-md"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="images" className="block text-sm font-medium text-muted-foreground mb-1">Images (URLs, comma-separated)</label>
-                  <input
-                    type="text"
-                    id="images"
-                    name="images"
-                    value={formData.images}
-                    onChange={handleFormChange}
-                    className="w-full p-2 border border-input rounded-md"
-                  />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button
-                    type="button"
-                    onClick={() => setShowAddForm(false)}
-                    variant="outline"
-                    className="bg-red-600 hover:bg-red-700 text-white"
-                  >
-                    <X className="w-4 h-4 mr-2" /> Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={addingProduct}
-                    className="bg-[#2D5016] hover:bg-[#7BA428] text-white"
-                  >
-                    {addingProduct ? (
-                      <>
-                        <ShoppingCart className="w-4 h-4 mr-2 animate-pulse" />
-                        Adding...
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="w-4 h-4 mr-2" /> Add Product
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* Product Detail Layout - Fixed with proper safety checks */}
+          {/* Product Detail Layout */}
           {currentProduct && (
             <div className="max-w-7xl mx-auto">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -372,42 +291,13 @@ const ProductsPage = () => {
                   {/* Main Product Image */}
                   <div className="aspect-square relative overflow-hidden rounded-lg">
                     <Image
-                      src={
-                        currentProduct?.images?.[selectedImage] || 
-                        currentProduct?.images?.[0] || 
-                        '/assets/images/Product1.jpeg'
-                      }
+                      src={Product1} 
                       alt={currentProduct?.name || 'Product'}
                       width={600}
                       height={600}
                       className="w-full h-full object-cover"
                     />
                   </div>
-
-                  {/* Thumbnail Images */}
-                  {currentProduct?.images && currentProduct.images.length > 1 && (
-                    <div className="flex gap-2">
-                      {currentProduct.images.map((image, index) => (
-                        <button
-                          key={index}
-                          onClick={() => handleImageSelect(index)}
-                          className={`aspect-square w-20 h-20 rounded-lg overflow-hidden border-2 ${
-                            selectedImage === index 
-                              ? 'border-[#2D5016]' 
-                              : 'border-gray-200'
-                          }`}
-                        >
-                          <Image
-                            src={image}
-                            alt={`${currentProduct.name} view ${index + 1}`}
-                            width={80}
-                            height={80}
-                            className="w-full h-full object-cover"
-                          />
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </div>
 
                 {/* Right Column - Product Details */}
@@ -429,7 +319,7 @@ const ProductsPage = () => {
                         <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                       ))}
                     </div>
-                    <span className="text-muted-foreground">(2,847 reviews)</span>
+                    <span className="text-muted-foreground">(reviews)</span>
                   </div>
 
                   {/* Description */}
