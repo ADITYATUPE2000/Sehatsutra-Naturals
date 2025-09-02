@@ -3,7 +3,7 @@ import React from 'react'
 import { Provider } from 'react-redux'
 import { persistor, store } from '@/store/store'
 import { PersistGate } from 'redux-persist/integration/react'
-import Loading from './loading'
+import Loading from '@components/Application/loading'
 
 const GlobalProvider = ({children}) => {
   return (

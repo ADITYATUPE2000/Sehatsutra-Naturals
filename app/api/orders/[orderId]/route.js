@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { connectDB } from '@/lib/mongodb';
+import { connectDB } from "@/lib/databaseConnection";
 import Order from '@/models/Order.model';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
