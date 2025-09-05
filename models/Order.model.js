@@ -90,6 +90,12 @@ const orderSchema = new mongoose.Schema({
   },
   notes: {
     type: String
+  },
+  razorpayOrderId: {
+    type: String
+  },
+  razorpayPaymentId: {
+    type: String
   }
 }, {
   timestamps: true

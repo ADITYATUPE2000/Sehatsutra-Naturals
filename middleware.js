@@ -4,8 +4,9 @@ import { WEBSITE_LOGIN, USER_DASHBOARD } from "./routes/WebsiteRoute"
 import { ADMIN_DASHBOARD } from "./routes/AdminPanelRoute"
 
 export async function middleware(request) {
+    const pathname = request.nextUrl.pathname
+    
     try {
-        const pathname = request.nextUrl.pathname
         const hasToken = request.cookies.has('access_token')
 
         if (!hasToken) {

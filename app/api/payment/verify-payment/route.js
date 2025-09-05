@@ -1,43 +1,70 @@
 import { NextResponse } from 'next/server';
-import { connectDB } from "@/lib/databaseConnection";
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import Cart from '@/models/Cart.model';
-import Order from '@/models/Order.model';
-import razorpay from '@/lib/razorpay';
+import { connectDB } from '@/lib/databaseConnection';
+import { isAuthenticated } from '@/lib/authentication';
+import Razorpay from 'razorpay';
 import crypto from 'crypto';
+import Order from '@/models/Order.model';
+import Cart from '@/models/Cart.model';
+
+const razorpay = new Razorpay({
+  key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 
 export async function POST(request) {
   try {
-    const session = await getServerSession(authOptions);
+    await connectDB();
     
-    if (!session) {
+    const authResult = await isAuthenticated('user');
+    
+    if (!authResult.isAuth) {
       return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
+        { success: false, error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = await request.json();
 
-    // Verify the signature
+    // Verify the payment signature
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSignature = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
       .update(body.toString())
       .digest('hex');
 
-    if (expectedSignature !== razorpay_signature) {
+    const isAuthentic = expectedSignature === razorpay_signature;
+
+    if (!isAuthentic) {
       return NextResponse.json(
-        { success: false, message: 'Invalid signature' },
+        { success: false, error: 'Invalid payment signature' },
         { status: 400 }
       );
     }
 
-    await connectDB();
+    // Get the Razorpay order to retrieve notes
+    const razorpayOrder = await razorpay.orders.fetch(razorpay_order_id);
+    
+    if (!razorpayOrder || !razorpayOrder.notes) {
+      return NextResponse.json(
+        { success: false, error: 'Order not found' },
+        { status: 404 }
+      );
+    }
+
+    // Parse shipping address from notes
+    let shippingAddress;
+    try {
+      shippingAddress = JSON.parse(razorpayOrder.notes.shippingAddress);
+    } catch (error) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid shipping address data' },
+        { status: 400 }
+      );
+    }
 
     // Get user's cart
-    const cart = await Cart.findOne({ user: session.user.id })
+    const cart = await Cart.findOne({ user: authResult.userId, isActive: true })
       .populate({
         path: 'items.product',
         select: 'name price images'
@@ -45,8 +72,8 @@ export async function POST(request) {
 
     if (!cart || cart.items.length === 0) {
       return NextResponse.json(
-        { success: false, message: 'Cart is empty' },
-        { status: 400 }
+        { success: false, error: 'Cart not found' },
+        { status: 404 }
       );
     }
 
@@ -55,40 +82,44 @@ export async function POST(request) {
       return sum + (item.product.price * item.quantity);
     }, 0);
 
-    // Create order
+    // Create order record with all required fields
     const order = new Order({
-      user: session.user.id,
+      user: authResult.userId,
       items: cart.items.map(item => ({
         product: item.product._id,
         quantity: item.quantity,
-        price: item.product.price
+        price: item.product.price,
+        name: item.product.name,
+        image: item.product.images?.[0] || ''
       })),
-      totalAmount,
-      paymentStatus: 'completed',
-      paymentId: razorpay_payment_id,
-      orderId: razorpay_order_id,
-      status: 'processing'
+      totalAmount: totalAmount,
+      shippingAddress: shippingAddress,
+      paymentMethod: 'online',
+      paymentStatus: 'paid',
+      status: 'pending',
+      razorpayOrderId: razorpay_order_id,
+      razorpayPaymentId: razorpay_payment_id
     });
 
     await order.save();
 
-    // Clear cart
+    // Clear the user's cart
     await Cart.findOneAndUpdate(
-      { user: session.user.id },
+      { user: authResult.userId, isActive: true },
       { $set: { items: [] } }
     );
 
     return NextResponse.json({
       success: true,
-      data: {
-        orderId: order._id,
-        paymentId: razorpay_payment_id
-      }
+      orderId: order._id,
+      message: 'Payment verified successfully'
     });
+
   } catch (error) {
     console.error('Error verifying payment:', error);
+    
     return NextResponse.json(
-      { success: false, message: 'Error verifying payment' },
+      { success: false, error: 'Error verifying payment' },
       { status: 500 }
     );
   }

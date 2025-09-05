@@ -11,7 +11,6 @@ import { useStore } from '@/lib/store';
 import { useRouter } from 'next/navigation';
 import Product1 from '@/assets/images/Product1.jpeg';
 
-
 const CheckoutPage = () => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -105,6 +104,7 @@ const CheckoutPage = () => {
       // Create Razorpay order
       const createOrderResponse = await fetch('/api/payment/create-order', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -120,10 +120,24 @@ const CheckoutPage = () => {
         }),
       });
 
+      if (!createOrderResponse.ok) {
+        const errorText = await createOrderResponse.text();
+        console.error('Server response:', errorText);
+        throw new Error(`Server error: ${createOrderResponse.status}`);
+      }
+
       const orderData = await createOrderResponse.json();
-      
+      console.log('Order response:', orderData);
+
       if (!orderData.success) {
         showToast('error', orderData.error || 'Failed to create order');
+        setProcessing(false);
+        return;
+      }
+
+      if (!orderData.order || !orderData.order.id) {
+        console.error('Invalid order data structure:', orderData);
+        showToast('error', 'Invalid order data received');
         setProcessing(false);
         return;
       }
@@ -147,17 +161,17 @@ const CheckoutPage = () => {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-                orderId: orderData.orderId,
+                orderId: orderData.orderId || orderData.order.id,
               }),
             });
 
             const verifyData = await verifyResponse.json();
-            
+
             if (verifyData.success) {
-              showToast('success', 'Payment successful!');
+              showToast('success', 'Payment successful! Order placed.');
               router.push(`/order-success/${verifyData.orderId}`);
             } else {
-              showToast('error', 'Payment verification failed');
+              showToast('error', verifyData.error || 'Payment verification failed');
             }
           } catch (error) {
             console.error('Error verifying payment:', error);
@@ -169,9 +183,6 @@ const CheckoutPage = () => {
           email: formData.email,
           contact: formData.phone,
         },
-        notes: {
-          address: `${formData.address}, ${formData.city}, ${formData.state} - ${formData.zipCode}`,
-        },
         theme: {
           color: '#2D5016',
         },
@@ -179,10 +190,10 @@ const CheckoutPage = () => {
 
       const razorpay = new window.Razorpay(options);
       razorpay.open();
-      
+
     } catch (error) {
       console.error('Error during checkout:', error);
-      showToast('error', 'Error processing order');
+      showToast('error', 'Error during checkout');
     } finally {
       setProcessing(false);
     }
@@ -192,9 +203,10 @@ const CheckoutPage = () => {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen bg-background pt-16 flex items-center justify-center">
+        <div className="min-h-screen flex items-center justify-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
         </div>
+        <Footer />
       </>
     );
   }
@@ -203,34 +215,17 @@ const CheckoutPage = () => {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen bg-background pt-16 flex items-center justify-center">
+        <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <ShoppingCart className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <h1 className="text-2xl font-bold mb-4">Please Login</h1>
-            <p className="text-muted-foreground mb-6">Please login to checkout</p>
+            <h2 className="text-2xl font-bold mb-4">Please login to checkout</h2>
             <Link href="/auth/login">
-              <Button>Login</Button>
+              <Button className="bg-[#2D5016] hover:bg-[#7BA428] text-white">
+                Login
+              </Button>
             </Link>
           </div>
         </div>
-      </>
-    );
-  }
-
-  if (cartItems.length === 0) {
-    return (
-      <>
-        <Navbar />
-        <div className="min-h-screen bg-background pt-16 flex items-center justify-center">
-          <div className="text-center">
-            <ShoppingCart className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <h1 className="text-2xl font-bold mb-4">Cart is Empty</h1>
-            <p className="text-muted-foreground mb-6">Add some products to checkout</p>
-            <Link href="/products">
-              <Button>Continue Shopping</Button>
-            </Link>
-          </div>
-        </div>
+        <Footer />
       </>
     );
   }
@@ -238,14 +233,14 @@ const CheckoutPage = () => {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-background pt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="min-h-screen bg-background py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold text-foreground mb-8">Checkout</h1>
-
-          <form onSubmit={handleCheckout} className="grid lg:grid-cols-3 gap-8">
-            {/* Shipping Information */}
-            <div className="lg:col-span-2 space-y-6 border rounded ">
-              <div className="bg-card rounded-lg p-6">
+          
+          <form onSubmit={handleCheckout} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-6">
+              {/* Shipping Information */}
+              <div className="bg-card rounded-lg p-6 border">
                 <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center">
                   <User className="w-5 h-5 mr-2" />
                   Shipping Information
@@ -294,15 +289,15 @@ const CheckoutPage = () => {
                     />
                   </div>
                   
-                  <div className="md:col-span-2">
+                  <div>
                     <label className="block text-sm font-medium text-foreground mb-2">
                       Address *
                     </label>
-                    <textarea
+                    <input
+                      type="text"
                       name="address"
                       value={formData.address}
                       onChange={handleInputChange}
-                      rows="3"
                       className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                       required
                     />
@@ -397,7 +392,7 @@ const CheckoutPage = () => {
 
             {/* Order Summary */}
             <div className="lg:col-span-1">
-              <div className="bg-card rounded-lg p-6 sticky top-24 border rounded ">
+              <div className="bg-card rounded-lg p-6 sticky top-24 border">
                 <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center">
                   <ShoppingCart className="w-5 h-5 mr-2" />
                   Order Summary
@@ -408,7 +403,7 @@ const CheckoutPage = () => {
                     <div key={item.product._id} className="flex items-center space-x-3">
                       <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
                         <Image
-                          src={ Product1 }
+                          src={Product1}
                           alt={item.product.name}
                           width={64}
                           height={64}
@@ -445,7 +440,7 @@ const CheckoutPage = () => {
 
                 <Button
                   type="submit"
-                  disabled={processing}
+                  disabled={processing || cartItems.length === 0}
                   className="w-full mt-6 bg-[#2D5016] hover:bg-[#7BA428] text-white"
                 >
                   {processing ? 'Processing...' : 'Proceed to Payment'}
