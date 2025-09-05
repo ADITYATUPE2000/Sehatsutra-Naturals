@@ -107,3 +107,92 @@ All colors MUST be HSL.
     font-family: "Sitka Display", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
 }
+
+/* Custom Animation Keyframes */
+@layer utilities {
+  /* Slide from top animation */
+  @keyframes slideInFromTop {
+    0% {
+      opacity: 0;
+      transform: translateY(-30px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Slide from right animation */
+  @keyframes slideInFromRight {
+    0% {
+      opacity: 0;
+      transform: translateX(30px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Slide from left animation */
+  @keyframes slideInFromLeft {
+    0% {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Animation classes with proper initial states */
+  .animate-slide-in-top {
+    animation: slideInFromTop 0.8s ease-out forwards;
+  }
+
+  .animate-slide-in-right {
+    animation: slideInFromRight 0.8s ease-out forwards;
+  }
+
+  .animate-slide-in-left {
+    animation: slideInFromLeft 0.8s ease-out forwards;
+  }
+
+  /* Initial hidden states - these are applied before animation triggers */
+  .animate-hidden-top {
+    opacity: 0;
+    transform: translateY(-30px);
+    transition: none;
+  }
+
+  .animate-hidden-right {
+    opacity: 0;
+    transform: translateX(30px);
+    transition: none;
+  }
+
+  .animate-hidden-left {
+    opacity: 0;
+    transform: translateX(-30px);
+    transition: none;
+  }
+
+  /* Respect user's motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-slide-in-top,
+    .animate-slide-in-right,
+    .animate-slide-in-left {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+    
+    .animate-hidden-top,
+    .animate-hidden-right,
+    .animate-hidden-left {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+}
