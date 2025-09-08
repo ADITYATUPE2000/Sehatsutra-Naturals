@@ -17,7 +17,7 @@ export async function GET() {
         slug: 'sehatsutra-naturals-organic-moringa-powder',
         brand: 'Sehatsutra Naturals',
         category: 'Health & Wellness',
-        price: 599,
+        price: 249,
         originalPrice: 799,
         discount: 25,
         description: 'Premium quality organic moringa powder made from naturally dried moringa leaves.',
