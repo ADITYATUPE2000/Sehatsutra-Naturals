@@ -308,7 +308,7 @@ const ProductsPage = ({ product }) => { // Added proper destructuring
                       {currentProduct.name}
                     </h1>
                     <p className="text-2xl font-bold text-[#2D5016]">
-                      ₹{currentProduct.price}
+                      ₹{currentProduct.mrp}
                     </p>
                   </div>
 

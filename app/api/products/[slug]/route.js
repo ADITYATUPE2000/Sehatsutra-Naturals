@@ -18,9 +18,13 @@ export async function GET(request, { params }) {
       );
     }
     
+    // Remove discountPrice from response
+    const productObj = product.toObject();
+    delete productObj.discountPrice;
+
     return NextResponse.json({
       success: true,
-      data: product
+      data: productObj
     });
     
   } catch (error) {

@@ -166,8 +166,8 @@ const ProductPage = () => {
                 </h1>
                 
                 <div className="flex items-center space-x-4 mb-4">
-                  <div className="text-3xl font-bold text-primary">
-                    ₹{product.price}
+                <div className="text-3xl font-bold text-primary">
+                    ₹{product.mrp}
                   </div>
                   <div className="flex items-center space-x-1">
                     {[...Array(5)].map((_, i) => (

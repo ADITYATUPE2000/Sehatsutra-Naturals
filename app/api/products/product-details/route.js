@@ -7,32 +7,36 @@ export async function GET() {
     await connectDB();
 
     // Check if product exists, if not create it
-    let product = await Product.findOne({ 
-      slug: 'sehatsutra-naturals-organic-moringa-powder' 
+    let product = await Product.findOne({
+      slug: 'sehatsutra-naturals-organic-moringa-powder'
     });
 
     if (!product) {
+      // Create a default category ObjectId (this should be replaced with actual category)
+      const defaultCategoryId = '507f1f77bcf86cd799439011'; // Placeholder ObjectId
+
       product = await Product.create({
         name: 'Sehatsutra Naturals - Organic Moringa Powder',
         slug: 'sehatsutra-naturals-organic-moringa-powder',
         brand: 'Sehatsutra Naturals',
-        category: 'Health & Wellness',
-        price: 599,
-        originalPrice: 799,
-        discount: 25,
-        description: 'Premium quality organic moringa powder made from naturally dried moringa leaves.',
+        category: defaultCategoryId, // Should be ObjectId
+        mrp: 249,
+        description: "Premium organic moringa powder by SEHATSUTRA NATURALS. Rich in iron, calcium & antioxidants. 100% pure & natural superfood. Ancient purity, modern wellness. Made in India. Net quantity: 250g.",
         images: [
           '/assets/images/Product1.jpeg',
           '/assets/images/Product.png'
         ],
-        
-        
-        isActive: true,
-        featured: true
+        media: [], // Required by schema
+        stock: 100, // Required by schema
+        isActive: true
       });
     }
 
-    return NextResponse.json(product);
+    // Remove discountPrice from response
+    const productObj = product.toObject();
+    delete productObj.discountPrice;
+
+    return NextResponse.json(productObj);
   } catch (error) {
     console.error('Error fetching product:', error);
     return NextResponse.json(
