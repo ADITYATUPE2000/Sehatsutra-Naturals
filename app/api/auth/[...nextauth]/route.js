@@ -50,7 +50,7 @@ const authOptions = {
     maxAge: 7 * 24 * 60 * 60, // 7 days
   },
   jwt: {
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: process.env.JWT_SECRET,
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -72,7 +72,7 @@ const authOptions = {
     signIn: '/auth/login',
     error: '/auth/login',
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.JWT_SECRET,
 }
 
 const handler = NextAuth(authOptions)
