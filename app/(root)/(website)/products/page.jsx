@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from "next-auth/react";
 import { useDispatch, useSelector } from "react-redux";
 import { addIntoCart } from "@/store/reducer/cartReducer";
-import Product1 from '@/assets/images/Product1.jpeg';
+import Product1 from '@/assets/images/Product1.png';
  
 
 const ProductsPage = ({ product }) => { // Added proper destructuring
