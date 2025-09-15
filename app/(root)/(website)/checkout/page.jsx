@@ -9,7 +9,7 @@ import { ShoppingCart, CreditCard, MapPin, User } from "lucide-react";
 import { showToast } from '@/lib/showToast';
 import { useStore } from '@/lib/store';
 import { useRouter } from 'next/navigation';
-import Product1 from '@/assets/images/Product1.jpeg';
+import Product1 from '@/assets/images/Product1.png';
 
 const CheckoutPage = () => {
   const [cartItems, setCartItems] = useState([]);
