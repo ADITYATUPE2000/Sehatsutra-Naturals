@@ -10,7 +10,7 @@ import { showToast } from '@/lib/showToast';
 import { useStore } from '@/lib/store';
 import { useSelector } from "react-redux";
 import { WEBSITE_CHECKOUT } from '@/routes/WebsiteRoute';
-import Product1 from '@/assets/images/Product1.jpeg';
+import Product1 from '@/assets/images/Product1.png';
 
 const CartPage = () => {
   const cart = useSelector(store => store.cartStore);
