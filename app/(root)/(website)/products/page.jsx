@@ -382,7 +382,6 @@ const ProductsPage = ({ product }) => { // Added proper destructuring
                           <ul className="space-y-2 text-muted-foreground">
                             <li>• Premium organic ingredients</li>
                             <li>• Rich in essential nutrients</li>
-                            <li>• 100% pure & natural</li>
                             <li>• Made in India</li>
                             <li>• Traditional Ayurvedic wisdom</li>
                             <li>• Modern wellness benefits</li>
